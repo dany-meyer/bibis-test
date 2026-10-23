@@ -5,7 +5,7 @@ Durchgängiges Beispiel: das **BibIS** (Bibliotheks-Informationssystem).
 
 ## Voraussetzungen
 
-- JDK 21
+- JDK > 21
 - IntelliJ IDEA (Maven ist eingebaut)
 
 ## Projekt öffnen
@@ -13,7 +13,7 @@ Durchgängiges Beispiel: das **BibIS** (Bibliotheks-Informationssystem).
 IntelliJ → *File → New → Project from Version Control* → URL dieses Repositorys.
 Maven lädt JUnit 6, Mockito und Playwright automatisch.
 
-**Vor dem Termin mit Übung 7** einmal alle Tests ausführen (`mvn test` oder Rechtsklick auf `src/test/java` → *Run Tests*).
+**Vor der Übung ** einmal alle Tests ausführen (`mvn test` oder Rechtsklick auf `src/test/java` → *Run Tests*).
 Playwright lädt dabei die Browser herunter (einige Hundert MB).
 
 ## Inhalt
@@ -26,7 +26,7 @@ Playwright lädt dabei die Browser herunter (einige Hundert MB).
 | `src/test/java/de/hnu/bibis/e2e` | `SucheE2ETest` – Beispiel für einen End-to-End-Test |
 | `bibis-web/index.html` | kleine BibIS-Oberfläche für die End-to-End-Tests (Übung 7) |
 
-## Playwright Codegen (Übung 7)
+## Playwright Codegen
 
 ```bash
 mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="codegen"
