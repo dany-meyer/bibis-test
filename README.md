@@ -36,3 +36,12 @@ Im geöffneten Browser die Datei `bibis-web/index.html` öffnen (Adresszeile: `f
 klicken und den erzeugten Code im Inspector-Fenster lesen.
 
 Zum Zuschauen beim Testlauf: in der Run-Konfiguration die Umgebungsvariable `PWDEBUG=1` setzen.
+
+## Lasttest mit k6 (optional)
+
+k6 installieren (`brew install k6`, unter Windows `winget install k6 --source winget`), dann im Ordner `bibis-test`:
+
+```bash
+python3 -m http.server 8080 --directory bibis-web   # Terminal 1: Oberfläche starten
+k6 run src/test/k6/lasttest.js                      # Terminal 2: Lasttest ausführen
+```
