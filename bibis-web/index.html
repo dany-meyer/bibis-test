@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BibIS – Bibliothek</title>
+  <style>
+    :root { --navy: #041B64; --gelb: #F1E400; --hell: #E8EEF7; --rot: #B3261E; --gruen: #1E6B2E; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #fff; color: #1a1a1a; }
+    header { background: var(--navy); color: #fff; padding: 14px 24px; display: flex; align-items: baseline; gap: 16px; }
+    header h1 { margin: 0; font-size: 22px; }
+    header span { opacity: .8; font-size: 14px; }
+    main { max-width: 900px; margin: 0 auto; padding: 16px 24px 48px; }
+    h2 { color: var(--navy); font-size: 19px; margin: 28px 0 10px; }
+    form { display: flex; gap: 8px; align-items: center; }
+    input[type=search] { flex: 1; padding: 8px 10px; font-size: 16px; border: 1px solid #999; border-radius: 4px; }
+    button { padding: 7px 14px; font-size: 15px; border-radius: 4px; border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer; }
+    button:disabled { background: #bbb; border-color: #bbb; cursor: not-allowed; }
+    ul.treffer { list-style: none; padding: 0; margin: 12px 0 0; }
+    ul.treffer li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #ddd; }
+    .status { font-size: 14px; color: #555; }
+    .meldung { margin-top: 12px; padding: 10px 12px; border-radius: 4px; background: var(--hell); }
+    .meldung.fehler { background: #FADBD8; color: var(--rot); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #ddd; }
+    th { background: var(--hell); color: var(--navy); }
+    .leer { color: #666; font-style: italic; padding: 10px 12px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>BibIS</h1><span>Bibliotheks-Informationssystem der HNU – Übungsversion</span>
+</header>
+<main>
+  <section aria-labelledby="h-suche">
+    <h2 id="h-suche">Katalog durchsuchen</h2>
+    <form id="suchformular" role="search">
+      <label for="suche">Suchbegriff</label>
+      <input type="search" id="suche" name="suche" placeholder="Titel oder Autor">
+      <button type="submit" id="suche-starten">Suchen</button>
+    </form>
+    <ul class="treffer" id="treffer" aria-label="Suchergebnisse"></ul>
+    <div id="suchmeldung" role="status"></div>
+  </section>
+
+  <section aria-labelledby="h-konto">
+    <h2 id="h-konto">Mein Konto – Ausleihen</h2>
+    <table aria-label="Meine Ausleihen">
+      <thead><tr><th>Titel</th><th>Fällig am</th><th>Verlängerungen</th><th></th></tr></thead>
+      <tbody id="ausleihen"></tbody>
+    </table>
+    <div id="kontomeldung" role="alert" aria-live="assertive"></div>
+  </section>
+</main>
+
+<script>
+  // Feste Daten, damit Tests wiederholbar sind (kein "heute").
+  const KATALOG = [
+    { id: 'clean-code', titel: 'Clean Code', autor: 'Robert C. Martin', verfuegbar: 0, warteschlange: 0 },
+    { id: 'basiswissen', titel: 'Basiswissen Softwaretest', autor: 'Linz, Spillner', verfuegbar: 0, warteschlange: 1 },
+    { id: 'tdd', titel: 'Test-Driven Development', autor: 'Kent Beck', verfuegbar: 2, warteschlange: 0 },
+    { id: 'xunit', titel: 'xUnit Test Patterns', autor: 'Gerard Meszaros', verfuegbar: 0, warteschlange: 0 },
+    { id: 'agile-testing', titel: 'Agile Testing', autor: 'Crispin, Gregory', verfuegbar: 1, warteschlange: 0 }
+  ];
+  // Ausleihen der angemeldeten Person
+  const AUSLEIHEN = [
+    { id: 'clean-code', faellig: new Date(2026, 10, 2), verlaengerungen: 0 },
+    { id: 'basiswissen', faellig: new Date(2026, 10, 9), verlaengerungen: 1 }
+  ];
+  const MAX = 3, FRIST = 28;
+  const titelVon = id => KATALOG.find(t => t.id === id);
+  const fmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  function zeigeTreffer(begriff) {
+    const liste = document.getElementById('treffer');
+    const meldung = document.getElementById('suchmeldung');
+    liste.innerHTML = ''; meldung.textContent = ''; meldung.className = '';
+    const b = begriff.trim().toLowerCase();
+    if (!b) { meldung.textContent = 'Bitte geben Sie einen Suchbegriff ein.'; meldung.className = 'meldung fehler'; return; }
+    const treffer = KATALOG.filter(t => (t.titel + ' ' + t.autor).toLowerCase().includes(b));
+    if (treffer.length === 0) { meldung.textContent = 'Keine Treffer für „' + begriff.trim() + '“.'; meldung.className = 'meldung'; return; }
+    meldung.textContent = treffer.length + ' Treffer';
+    treffer.forEach(t => {
+      const li = document.createElement('li');
+      li.id = 'treffer-' + t.id;
+      const info = document.createElement('div');
+      info.innerHTML = '<strong></strong><div class="status"></div>';
+      info.querySelector('strong').textContent = t.titel;
+      const status = info.querySelector('.status');
+      status.textContent = t.autor + ' · ' + (t.verfuegbar > 0 ? t.verfuegbar + ' verfügbar' : 'alle Exemplare ausgeliehen');
+      li.appendChild(info);
+      if (t.verfuegbar === 0) {
+        const btn = document.createElement('button');
+        btn.textContent = 'Vormerken';
+        btn.setAttribute('aria-label', 'Vormerken: ' + t.titel);
+        btn.id = 'vormerken-' + t.id;
+        btn.addEventListener('click', () => {
+          t.warteschlange += 1;
+          btn.disabled = true;
+          status.textContent = 'Vorgemerkt – Sie sind auf Position ' + t.warteschlange + ' der Warteschlange';
+        });
+        li.appendChild(btn);
+      }
+      liste.appendChild(li);
+    });
+  }
+
+  function zeigeAusleihen() {
+    const tbody = document.getElementById('ausleihen');
+    tbody.innerHTML = '';
+    AUSLEIHEN.forEach(a => {
+      const t = titelVon(a.id);
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td></td><td></td><td></td><td></td>';
+      tr.children[0].textContent = t.titel;
+      tr.children[1].textContent = fmt(a.faellig);
+      tr.children[1].id = 'faellig-' + a.id;
+      tr.children[2].textContent = a.verlaengerungen + ' von ' + MAX;
+      tr.children[2].id = 'anzahl-' + a.id;
+      const btn = document.createElement('button');
+      btn.textContent = 'Verlängern';
+      btn.setAttribute('aria-label', 'Verlängern: ' + t.titel);
+      btn.id = 'verlaengern-' + a.id;
+      btn.disabled = a.verlaengerungen >= MAX;
+      btn.addEventListener('click', () => verlaengere(a));
+      tr.children[3].appendChild(btn);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function verlaengere(a) {
+    const meldung = document.getElementById('kontomeldung');
+    meldung.className = ''; meldung.textContent = '';
+    if (a.verlaengerungen >= MAX) {
+      meldung.textContent = 'Verlängerung nicht möglich: maximale Anzahl erreicht';
+      meldung.className = 'meldung fehler';
+      return;
+    }
+    a.faellig = new Date(a.faellig.getFullYear(), a.faellig.getMonth(), a.faellig.getDate() + FRIST);
+    a.verlaengerungen += 1;
+    zeigeAusleihen();
+    meldung.textContent = '„' + titelVon(a.id).titel + '“ verlängert bis ' + fmt(a.faellig);
+    meldung.className = 'meldung';
+  }
+
+  document.getElementById('suchformular').addEventListener('submit', e => {
+    e.preventDefault();
+    zeigeTreffer(document.getElementById('suche').value);
+  });
+  zeigeAusleihen();
+</script>
+</body>
+</html>
