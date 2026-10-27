@@ -24,7 +24,6 @@ class VerlaengerungsServiceTest {
 
     @Mock
     VormerkungsRepository vormerkungen;   // Attrappe für die Datenbank
-
     VerlaengerungsService service;        // Klasse unter Test
 
     @BeforeEach
@@ -41,10 +40,15 @@ class VerlaengerungsServiceTest {
     void lehntAbWennVorgemerkt() {
         // Arrange
         Ausleihe ausleihe = new Ausleihe("T-4711", LocalDate.of(2026, 11, 2));
+        // Voraussetzung: Die Anzahl der Verlängerungen ist 0.
+        // Eine Ablehnung kann also nicht durch die Grenze von 3 entstehen.
         when(vormerkungen.existiertVormerkung("T-4711")).thenReturn(true);    // Stubbing
-        // Act + Assert
-        assertThrows(VerlaengerungNichtMoeglichException.class,
-                () -> service.verlaengere(ausleihe));
+
+        // Act + Assert: abgelehnt – und zwar wegen der Vormerkung
+        VerlaengerungNichtMoeglichException ex = assertThrows(
+                VerlaengerungNichtMoeglichException.class, () -> service.verlaengere(ausleihe));
+        assertEquals("Titel ist vorgemerkt", ex.getMessage());
+
         // Assert: Ausleihe bleibt unverändert
         assertEquals(LocalDate.of(2026, 11, 2), ausleihe.getFaelligAm());
         assertEquals(0, ausleihe.getAnzahlVerlaengerungen());
@@ -84,10 +88,12 @@ class VerlaengerungsServiceTest {
         LocalDate neu = service.verlaengere(ausleihe);
 
         // Assert
-        // TODO: 1. Das neue Datum ist der 30.11.2026 (assertEquals mit neu).
-        //       2. Die Ausleihe hat jetzt 1 Verlängerung (getAnzahlVerlaengerungen).
-        //       3. Der Service hat das Repository gefragt:
-        //          verify(vormerkungen).existiertVormerkung("T-4711");
+        // TODO: Zwingend – das Ergebnis prüfen:
+        //         1. Das neue Datum ist der 30.11.2026 (assertEquals mit neu).
+        //         2. Die Ausleihe hat jetzt 1 Verlängerung (getAnzahlVerlaengerungen).
+        //       Ergänzend – den Aufruf prüfen:
+        //         3. Der Service hat das Repository mit "T-4711" gefragt:
+        //            verify(vormerkungen).existiertVormerkung("T-4711");
         fail("TODO noch offen");
     }
 
