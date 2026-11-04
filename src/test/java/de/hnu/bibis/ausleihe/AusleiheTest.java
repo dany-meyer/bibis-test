@@ -48,6 +48,6 @@ class AusleiheTest {
     @Test
     void zweiVerlaengerungenWerdenGezaehlt() {
         // TODO 3: Verlängern Sie zweimal – welches Datum und welchen Zähler erwarten Sie?
-        //fail("TODO 3 noch offen");
+        fail("TODO 3 noch offen");
     }
 }
