@@ -24,7 +24,7 @@ class VerlaengerungsServiceTest {
 
     @Mock
     VormerkungsRepository vormerkungen;   // Attrappe für die Datenbank
-    VerlaengerungsService service;        // Klasse unter Test
+    private VerlaengerungsService service;        // Klasse unter Test
 
     @BeforeEach
     void setUp() {
@@ -88,13 +88,11 @@ class VerlaengerungsServiceTest {
         LocalDate neu = service.verlaengere(ausleihe);
 
         // Assert
-        // TODO: Zwingend – das Ergebnis prüfen:
-        //         1. Das neue Datum ist der 30.11.2026 (assertEquals mit neu).
-        //         2. Die Ausleihe hat jetzt 1 Verlängerung (getAnzahlVerlaengerungen).
-        //       Ergänzend – den Aufruf prüfen:
-        //         3. Der Service hat das Repository mit "T-4711" gefragt:
-        //            verify(vormerkungen).existiertVormerkung("T-4711");
-        fail("TODO noch offen");
+        // Lösung – zwingend: das Ergebnis prüfen
+        assertEquals(LocalDate.of(2026, 11, 30), neu);
+        assertEquals(1, ausleihe.getAnzahlVerlaengerungen());
+        // Lösung – ergänzend: den Aufruf prüfen
+        verify(vormerkungen).existiertVormerkung("T-4711");
     }
 
 }

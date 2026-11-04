@@ -30,19 +30,24 @@ class AusleiheTest {
     @Test
     void merktSichTitelUndFaelligkeitsdatum() {
         // TODO 1: Prüfen Sie getTitelId() und getFaelligAm() mit assertEquals
-        fail("TODO 1 noch offen");
+        //fail("TODO 1 noch offen");
+        assertEquals("T-4711", ausleihe.getTitelId());
+        assertEquals(LocalDate.of(2026, 11, 2), ausleihe.getFaelligAm());
     }
 
     @Test
     void verlaengerungSetztNeuesDatumUndZaehltMit() {
         // TODO 2: Verlängern Sie bis zum 30.11.2026 (verlaengertBis)
         //         und prüfen Sie das neue Fälligkeitsdatum und den Zähler
-        fail("TODO 2 noch offen");
+        //fail("TODO 2 noch offen");
+        ausleihe.verlaengertBis(LocalDate.of(2026,11,30));
+        assertEquals(LocalDate.of(2026,11,30), ausleihe.getFaelligAm());
+        assertEquals(1, ausleihe.getAnzahlVerlaengerungen());
     }
 
     @Test
     void zweiVerlaengerungenWerdenGezaehlt() {
         // TODO 3: Verlängern Sie zweimal – welches Datum und welchen Zähler erwarten Sie?
-        fail("TODO 3 noch offen");
+        //fail("TODO 3 noch offen");
     }
 }
